@@ -1,4 +1,4 @@
-ftp
+FTP
 ===
 ##### ftp server
 <img  src="https://raw.github.com/jacklam718/ftp/master/screenshots/server.png" alt="ftp server"  width="450px" height="250px" />
