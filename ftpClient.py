@@ -89,6 +89,7 @@ class remoteGuiWidget(baseGuiWidget):
         baseGuiWidget.__init__(self, parent)
         self.downloadButton = QtGui.QPushButton( )
         self.downloadButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'download.png')))
+        self.homeButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'internet.png')))
         self.hbox2.addWidget(self.downloadButton)
         self.groupBox.setTitle('Remote')
 
