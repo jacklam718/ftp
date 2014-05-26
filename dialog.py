@@ -193,8 +193,6 @@ if __name__ == '__main__':
             pb.set_value(' '*i)
             w.addProgressbar(pb)
 
-        progresses.reverse( )
-
         for i in progresses:
             pb = uploadProgressWidget(text='upload')
             pb.set_max(100)
