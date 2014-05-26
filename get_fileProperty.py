@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#--*--encodig:utf8--*--
 import grp
 import pwd
 import time
