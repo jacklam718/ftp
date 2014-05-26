@@ -205,4 +205,3 @@ if __name__ == '__main__':
         app.exec_( )
     testProgressDialog( )
     testLoinDialog( )
-   
