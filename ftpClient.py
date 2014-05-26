@@ -4,12 +4,13 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import *
 from ftplib import FTP as ftp
 from get_fileProperty import fileProperty
-from dialog import loginDialog, progressDialog, downloadProgressWidget, uploadProgressWidget, progressBar
-import os, threading
-from socket import *
+from dialog import loginDialog, progressDialog, downloadProgressWidget, uploadProgressWidget
+import os
+import threading
+
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
 
-#--------------------------------------------------------------------------------[#
+#---------------------------------------------------------------------------------#
 ## The baseGuiWidget provide localGuiWidget and remoteGuiWidget to inheritance,  ##
 ## because this program has main of two widgets, local and remote file list with ##
 ## control widget, they are similar interface, so I write the superclass         ##
