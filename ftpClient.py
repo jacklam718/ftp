@@ -37,7 +37,6 @@ class baseGuiWidget(QtGui.QWidget):
         completer.setModel(self.completerModel)
         self.pathEdit.setCompleter(completer)
 
-
     def createGroupboxWidget(self):
         self.pathEdit   = QtGui.QLineEdit( )
         self.homeButton = QtGui.QPushButton( )
@@ -72,6 +71,7 @@ class baseGuiWidget(QtGui.QWidget):
         self.fileList.setRootIsDecorated(False)
         self.fileList.setHeaderLabels(('Name', 'Size', 'Owner', 'Group', 'Time', 'Mode'))
         self.fileList.header().setStretchLastSection(False)
+
 
 class localGuiWidget(baseGuiWidget):
     def __init__(self, parent=None):
@@ -146,7 +146,6 @@ class ftpClient(QtGui.QWidget):
     def disconnect(self):
         pass
 
-    
     def connect(self):
         from urlparse import urlparse
         host, ok = QtGui.QInputDialog.getText(self, 'Connect To Host', 'Host Address', QtGui.QLineEdit.Normal)
