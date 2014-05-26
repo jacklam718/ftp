@@ -7,12 +7,12 @@ class LoginDialog(QtGui.QDialog):
         super(self.__class__, self).__init__(parent)
         import os, pwd
         self.setFixedSize(400, 250)
-        self.nameLabel     = QtGui.QLabel('Name:')
-        self.passwordLabel = QtGui.QLabel('Password:')
-        self.nameEdit      = QtGui.QLineEdit( )
-        self.passwordEdit  = QtGui.QLineEdit( )
+        self.nameLabel   = QtGui.QLabel('Name:')
+        self.passwdLabel = QtGui.QLabel('Password:')
+        self.nameEdit    = QtGui.QLineEdit( )
+        self.passwdEdit  = QtGui.QLineEdit( )
         self.nameEdit.setText(pwd.getpwuid(os.getuid()).pw_name)
-        self.passwordEdit.setEchoMode(QtGui.QLineEdit.Password)
+        self.passwdEdit.setEchoMode(QtGui.QLineEdit.Password)
 
         self.buttonBox = QtGui.QDialogButtonBox( )
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
@@ -35,8 +35,8 @@ class LoginDialog(QtGui.QDialog):
         self.layout.addWidget(self.visitorRadio,  1, 0, 3, 1)
         self.layout.addWidget(self.nameLabel,     3, 0, 3, 1)
         self.layout.addWidget(self.nameEdit,      3, 1, 3, 1)
-        self.layout.addWidget(self.passwordLabel, 4, 0, 6, 1)
-        self.layout.addWidget(self.passwordEdit,  4, 1, 6, 1)
+        self.layout.addWidget(self.passwdLabel, 4, 0, 6, 1)
+        self.layout.addWidget(self.passwdEdit,  4, 1, 6, 1)
         self.groupBox.setLayout(self.layout)
         self.mainLayout = QtGui.QVBoxLayout( )
         self.mainLayout.addWidget(self.groupBox)
@@ -60,12 +60,12 @@ class LoginDialog(QtGui.QDialog):
             
     def enableEdit(self):
         self.nameEdit.setEnabled(True)
-        self.passwordEdit.setEnabled(True)
+        self.passwdEdit.setEnabled(True)
         self.checkNameField( )
 
     def disableEdit(self):
         self.nameEdit.setEnabled(False)
-        self.passwordEdit.setEnabled(False)
+        self.passwdEdit.setEnabled(False)
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setFocus( )
 
 
@@ -170,7 +170,7 @@ def loginDialog(parent=None):
     elif login.visitorRadio.isChecked( ):
         return ('anonymous', 'anonymous', True)
     else:
-        return (str(login.nameEdit.text( )), str(login.passwordEdit.text( )), True)
+        return (str(login.nameEdit.text( )), str(login.passwdEdit.text( )), True)
 
 if __name__ == '__main__':
     def testLoinDialog( ):
