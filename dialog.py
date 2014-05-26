@@ -69,20 +69,13 @@ class LoginDialog(QtGui.QDialog):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setFocus( )
 
 
-class progressBar(QtGui.QProgressBar):
-    #updateProgress = QtCore.pyqtSignal(int)
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent)
-        #self.totalValue = ''
-
-
 class baseProgressWidget(QtGui.QWidget):
     updateProgress = QtCore.pyqtSignal(str)
     def __init__(self, text='', parent=None):
         super(baseProgressWidget, self).__init__(parent)
         self.setFixedHeight(50)
         self.text  = text
-        self.progressbar = progressBar( )
+        self.progressbar = QtGui.QProgressBar( )
         self.progressbar.setTextVisible(True)
         self.updateProgress.connect(self.set_value)
 
