@@ -5,8 +5,8 @@ from PyQt4.QtCore import *
 from ftplib import FTP as ftp
 from get_fileProperty import fileProperty
 from dialog import loginDialog, progressDialog, downloadProgressWidget, uploadProgressWidget, progressBar
-import os
-
+import os, threading
+from socket import *
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
 
 #--------------------------------------------------------------------------------[#
@@ -36,6 +36,7 @@ class baseGuiWidget(QtGui.QWidget):
         self.completerModel = QtGui.QStringListModel( )
         completer.setModel(self.completerModel)
         self.pathEdit.setCompleter(completer)
+
 
     def createGroupboxWidget(self):
         self.pathEdit   = QtGui.QLineEdit( )
@@ -98,9 +99,8 @@ class ftpClient(QtGui.QWidget):
     def __init__(self, parent=None):
         super(ftpClient, self).__init__(parent)
         self.ftp = ftp( )
-
         self.setupGui( )
-        self.downloads=[]
+        self.downloads=[ ]
         self.remote.homeButton.clicked.connect(self.cdToRemoteHomeDirectory)
         self.remote.fileList.itemDoubleClicked.connect(self.cdToRemoteDirectory)
         self.remote.fileList.itemClicked.connect(lambda: self.remote.downloadButton.setEnabled(True))
@@ -117,6 +117,8 @@ class ftpClient(QtGui.QWidget):
         self.local.uploadButton.clicked.connect(self.upload)
         self.local.connectButton.clicked.connect(self.connect)
         QObject.connect(self.local.pathEdit, SIGNAL('returnPressed( )'), self.cdToLocalPath)
+
+        self.progressDialog = progressDialog(self)
 
     def setupGui(self):
         self.resize(1200, 650)
@@ -144,16 +146,16 @@ class ftpClient(QtGui.QWidget):
     def disconnect(self):
         pass
 
-    '''
+    
     def connect(self):
         from urlparse import urlparse
         host, ok = QtGui.QInputDialog.getText(self, 'Connect To Host', 'Host Address', QtGui.QLineEdit.Normal)
         host = str(host.toUtf8( ))
         try:
             if urlparse(host).hostname:
-                self.ftp.connect(host=urlparse(host).hostname, port=21, timeout=20)
+                self.ftp.connect(host=urlparse(host).hostname, port=21, timeout=10)
             else:
-                self.ftp.connect(host=host, port=21, timeout=20)
+                self.ftp.connect(host=host, port=21, timeout=10)
             self.login( )
         except:
             pass
@@ -168,8 +170,8 @@ class ftpClient(QtGui.QWidget):
         self.ftp.passwd = passwd
         self.ftp.login(user=user, passwd=passwd)
         self.initialize( )
+    
     '''
-
     def connect(self, address, port=21, timeout=10):
         from urlparse import urlparse
         if urlparse(address).hostname:
@@ -182,8 +184,9 @@ class ftpClient(QtGui.QWidget):
             self.ftp.login( )
         else:
             self.ftp.login(name, passwd)
+            self.ftp.user, self.ftp.passwd = (user, passwd)
         self.initialize( )
-    
+    '''
     #---------------------------------------------------------------------------------#
     ## the downloadToRemoteFileList with loadToLocalFileList is doing the same thing ##
     #---------------------------------------------------------------------------------#
@@ -405,17 +408,55 @@ class ftpClient(QtGui.QWidget):
         return self.remoteDir.get(dirname, None)
 
     def download(self):
-        pass    
-  
-    def upload(self):
-        pass
+        item     = self.remote.fileList.currentItem( )
+        srcfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
+        filesize = int(item.text(1))
+        dstfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8( )))
+        pb = downloadProgressWidget(text=srcfile)
+        pb.set_max(filesize)
+        self.progressDialog.addProgressbar(pb)
+        self.progressDialog.show( )
 
+        file = open(dstfile, 'wb')
+
+        def __callback(data):
+            pb.set_value(data)
+            file.write(data)
+
+        # create a new ftp connection
+        def __download( ):
+            fp = ftp( )
+            fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
+            fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
+            fp.retrbinary(cmd='RETR '+srcfile, callback=__callback)
+        threading.Thread(target=__download).start( )
+
+    def upload(self):
+        item     = self.local.fileList.currentItem( )
+        srcfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8( )))
+        filesize = int(item.text(1))
+        dstfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
+
+        pb = uploadProgressWidget(text=dstfile)
+        pb.set_max(filesize)
+        self.progressDialog.addProgressbar(pb)
+        self.progressDialog.show( )
+
+        file = open(srcfile, 'rb')
+
+        def __callback(buf):
+            pb.set_value(buf)
+        
+        def __upload( ):
+            fp = ftp( )
+            fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
+            fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
+            fp.storbinary(cmd='STOR '+dstfile, fp=file, callback=__callback)
+        threading.Thread(target=__upload).start( )
 
 if __name__ == '__main__':
     import sys
     app = QtGui.QApplication(sys.argv)
     client = ftpClient( )
     client.show( )
-    client.connect('mirrors.ircam.fr', timeout=10)
-    client.login( )
     app.exec_( )
