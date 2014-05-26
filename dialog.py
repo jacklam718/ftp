@@ -4,7 +4,7 @@ from PyQt4 import QtCore
 
 class LoginDialog(QtGui.QDialog):
     def __init__(self, parent=None):
-        super(LoginDialog, self).__init__(parent)
+        super(self.__class__, self).__init__(parent)
         import os, pwd
         self.setFixedSize(400, 250)
         self.nameLabel     = QtGui.QLabel('Name:')
@@ -70,28 +70,21 @@ class LoginDialog(QtGui.QDialog):
 
 
 class progressBar(QtGui.QProgressBar):
-    updateProgressBar = QtCore.pyqtSignal(int)
-    def __init__(self, total, parent=None):
-        super(progressBar, self).__init__(parent)
-        self.total = int(total)
-        self.progress = [0, 0]
-        self.setMaximum(self.total)
-
-    def updateProgress(self, received):
-        self.setValue(received)
-        self.setFormat('%s/%s' % (received, self.total))
-        self.progress = [received, self.total]
-        QtGui.qApp.processEvents( )
+    #updateProgress = QtCore.pyqtSignal(int)
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+        #self.totalValue = ''
 
 
 class baseProgressWidget(QtGui.QWidget):
-    def __init__(self, total, text='', parent=None):
+    updateProgress = QtCore.pyqtSignal(str)
+    def __init__(self, text='', parent=None):
         super(baseProgressWidget, self).__init__(parent)
-
+        self.setFixedHeight(50)
         self.text  = text
-        self.total = total
-        self.progressbar = progressBar(self.total)
+        self.progressbar = progressBar( )
         self.progressbar.setTextVisible(True)
+        self.updateProgress.connect(self.set_value)
 
         self.bottomBorder = QtGui.QWidget( )
         self.bottomBorder.setStyleSheet("""
@@ -114,11 +107,19 @@ class baseProgressWidget(QtGui.QWidget):
         self.mainLayout.addLayout(self.layout)
         self.mainLayout.addWidget(self.bottomBorder)
         self.setLayout(self.mainLayout)
+        self.totalValue = 0
+
+    def set_value(self, value):
+        self.totalValue += len(value)
+        self.progressbar.setValue(self.totalValue)
+
+    def set_max(self, value):
+        self.progressbar.setMaximum(value)
 
 
 class downloadProgressWidget(baseProgressWidget):
-    def __init__(self, total, text='', parent=None):
-        super(downloadProgressWidget, self).__init__(total, text, parent)
+    def __init__(self, text='Downloading', parent=None):
+        super(self.__class__, self).__init__(text, parent)
         style ="""
         QProgressBar {
             border: 2px solid grey;
@@ -134,8 +135,8 @@ class downloadProgressWidget(baseProgressWidget):
 
 
 class uploadProgressWidget(baseProgressWidget):
-    def __init__(self, total, text, parent=None):
-        super(uploadProgressWidget, self).__init__(total, text, parent)
+    def __init__(self, text='Uploading', parent=None):
+        super(self.__class__, self).__init__(text, parent)
         style ="""
         QProgressBar {
             border: 2px solid grey;
@@ -144,7 +145,7 @@ class uploadProgressWidget(baseProgressWidget):
         }
 
         QProgressBar::chunk {
-            background-color: #60B9CE;
+            background-color: #88B0EB;
             width: 20px;
         }"""
         self.progressbar.setStyleSheet(style)
@@ -152,8 +153,8 @@ class uploadProgressWidget(baseProgressWidget):
 
 class progressDialog(QtGui.QMainWindow):
     def __init__(self, parent=None):
-        super(progressDialog, self).__init__(parent)
-        self.resize(400, 250)
+        super(self.__class__, self).__init__(parent)
+        self.resize(500, 250)
         self.scrollArea = QtGui.QScrollArea( )
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
@@ -162,21 +163,19 @@ class progressDialog(QtGui.QMainWindow):
         self.scrollArea.setWidget(self.centralWidget)
 
         self.layout = QtGui.QVBoxLayout( )
-        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.setAlignment(QtCore.Qt.AlignTop)
+        self.layout.setContentsMargins(0,10,0,0)
         self.centralWidget.setLayout(self.layout)
-        self.show( )
-        self.activateWindow()
 
     def addProgressbar(self, progressbar):
         self.layout.addWidget(progressbar)
-
 
 def loginDialog(parent=None):
     login = LoginDialog(parent)
     if not login.isAccepted:
         return False
     elif login.visitorRadio.isChecked( ):
-        return ('anonymous@', 'anonymous@', True)
+        return ('anonymous', 'anonymous', True)
     else:
         return (str(login.nameEdit.text( )), str(login.passwordEdit.text( )), True)
 
@@ -186,6 +185,10 @@ if __name__ == '__main__':
         print(loginDialog( ))
 
     def testProgressDialog( ):
+        p = progressDialog( )
+
+
+    def testProgressDialog( ):
         import random
         number = [x for x in range(1, 101)]
         progresses = [ ]
@@ -193,16 +196,21 @@ if __name__ == '__main__':
         app = QtGui.QApplication([])
         w = progressDialog( )
         for i in progresses:
-            pb = downloadProgressWidget(total=100, text='download')
-            pb.progressbar.updateProgress(i)
+            pb = downloadProgressWidget(text='download')
+            pb.set_max(100)
+            pb.set_value(' '*i)
             w.addProgressbar(pb)
 
         progresses.reverse( )
+
         for i in progresses:
-            pb = uploadProgressWidget(total=100, text='upload')
-            pb.progressbar.updateProgress(i)
+            pb = uploadProgressWidget(text='upload')
+            pb.set_max(100)
+            pb.set_value(' '*i)
             w.addProgressbar(pb)
+        
         w.show( )
         app.exec_( )
-    testLoinDialog( )
     testProgressDialog( )
+    testLoinDialog( )
+   
