@@ -180,7 +180,6 @@ if __name__ == '__main__':
     def testProgressDialog( ):
         p = progressDialog( )
 
-
     def testProgressDialog( ):
         import random
         number = [x for x in range(1, 101)]
