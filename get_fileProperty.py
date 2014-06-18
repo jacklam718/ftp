@@ -1,5 +1,5 @@
-#!/usr/bin/python
-#--*--encodig:utf8--*--
+#!/usr/bin/env python
+# --*--codig: utf8 --*--
 import grp
 import pwd
 import time
