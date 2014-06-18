@@ -455,7 +455,7 @@ if __name__ == "__main__":
     log('Start ftp server', 'Enter q or Q to stop ftpServer...')
     listener = threading.Thread(target=serverListener)
     listener.start( )
-    raw_input( )
-    listen_sock.close( )
-    log('Server stop', 'Server closed')
-    sys.exit( )
+    if raw_input( ).lower() == "q":
+        listen_sock.close( )
+        log('Server stop', 'Server closed')
+        sys.exit( )
