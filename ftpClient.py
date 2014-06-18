@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#--*--encoding:utf8--*--
+# --*--coding: utf8 --*--
 from PyQt4 import QtGui
 from PyQt4.QtCore import *
 from ftplib import FTP as ftp
