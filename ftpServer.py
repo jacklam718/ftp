@@ -68,7 +68,6 @@ class ftpServerProtocol(threading.Thread):
 
             try:
                 cmd, arg = cmd[:4].strip().upper(), cmd[4:].strip( ) or None
-                print(cmd)
                 func = getattr(self, cmd)
                 func(arg)
             except AttributeError as err:
@@ -298,7 +297,6 @@ class ftpServerProtocol(threading.Thread):
         log('RETR', pathname)
         if not os.path.exists(pathname):
             return
-        print('Downlowding: ', pathname)
         try:
             if self.mode=='I':
                 file = open(pathname, 'rb')
@@ -329,7 +327,6 @@ class ftpServerProtocol(threading.Thread):
 
         pathname = os.path.join(self.cwd, filename)
         log('STOR', pathname)
-        print('Uploading: ', pathname)
         try:
             if self.mode == 'I':
                 file = open(pathname, 'wb')
