@@ -48,13 +48,13 @@ class LoginDialog(QtGui.QDialog):
         self.registerRadio.clicked.connect(self.enableEdit)
         self.visitorRadio.clicked.connect(self.disableEdit)
 
-        self.nameEdit.textEdited.connect(self.checkNameField)
+        self.nameEdit.textEdited.connect(self.checkNameEdit)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.show( )
         self.isAccepted = self.exec_( )
 
-    def checkNameField(self):
+    def checkNameEdit(self):
         if not self.nameEdit.text( ) and not self.visitorRadio.isChecked( ):
             self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
         elif self.nameEdit.text( ) and self.registerRadio.isChecked( ):
@@ -63,7 +63,7 @@ class LoginDialog(QtGui.QDialog):
     def enableEdit(self):
         self.nameEdit.setEnabled(True)
         self.passwdEdit.setEnabled(True)
-        self.checkNameField( )
+        self.checkNameEdit( )
 
     def disableEdit(self):
         self.nameEdit.setEnabled(False)
