@@ -1,28 +1,5 @@
 #!/usr/bin/env python
 # --*-- coding: utf-8 --*--
-#
-#    The MIT License (MIT)
-#
-#    Copyright (c) 2014 Jack Lam <jacklam718@gmail.com>
-#
-#    Permission is hereby granted, free of charge, to any person obtaining a copy
-#    of this software and associated documentation files (the "Software"), to deal
-#    in the Software without restriction, including without limitation the rights
-#    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#    copies of the Software, and to permit persons to whom the Software is
-#    furnished to do so, subject to the following conditions:
-#
-#    The above copyright notice and this permission notice shall be included in all
-#    copies or substantial portions of the Software.
-#
-#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#    SOFTWARE.
-
 
 from get_fileProperty import fileProperty
 import socket
@@ -42,8 +19,7 @@ def log(func, cmd):
         logmsg = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
         print("\033[31m%s\033[0m: \033[32m%s\033[0m" % (logmsg, cmd))
 
-
-class ftpServerProtocol(threading.Thread):
+class FtpServerProtocol(threading.Thread):
     def __init__(self, commSock, address):
         threading.Thread.__init__(self)
         self.authenticated = False
@@ -52,7 +28,7 @@ class ftpServerProtocol(threading.Thread):
         self.cwd           = CWD
         self.commSock      = commSock   # communication socket as command channel
         self.address       = address
-        
+
     def run(self):
         """
         receive commands from client and execute commands
@@ -142,7 +118,7 @@ class ftpServerProtocol(threading.Thread):
         self.serverSock.bind((HOST, 0))
         self.serverSock.listen(5)
         addr, port = self.serverSock.getsockname( )
-        #self.commSock.send('277 Entering Passve mode (%s,%d,%d).\r\n' % 
+        #self.commSock.send('277 Entering Passve mode (%s,%d,%d).\r\n' %
           #  (addr.replace('.', ','), (port / 256), (port % 256)))
         #self.commSock.send('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
         #self.commSock.send('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
@@ -167,33 +143,33 @@ class ftpServerProtocol(threading.Thread):
         self.dataSockAddr='.'.join(l[:4])
         self.dataSockPort=(int(l[4])<<8)+int(l[5])
         self.commSock.send('200 Get port.\r\n')
-    
+
     def LIST(self, dirpath):
         if not self.authenticated:
             self.commSock.send('530 User not logged in.\r\n')
             return
-        
+
         if not dirpath:
             pathname = os.path.abspath(os.path.join(self.cwd, '.'))
         elif dirpath.startswith(os.path.sep):
             pathname = os.path.abspath(dirpath)
         else:
             pathname = os.path.abspath(os.path.join(self.cwd, dirpath))
-            
+
         log('LIST', pathname)
         if not self.authenticated:
             self.commSock.send('530 User not logged in.\r\n')
-            
+
         elif not os.path.exists(pathname):
             self.commSock.send('550 LIST failed Path name not exists.\r\n')
-            
+
         else:
             self.commSock.send('150 Here is listing.\r\n')
             self.startDataSock( )
             if not os.path.isdir(pathname):
                 fileMessage = fileProperty(pathname)
                 self.dataSock.sock(fileMessage+'\r\n')
-                
+
             else:
                 for file in os.listdir(pathname):
                     fileMessage = fileProperty(os.path.join(pathname, file))
@@ -277,7 +253,7 @@ class ftpServerProtocol(threading.Thread):
             self.rnfr = pathname
 
     def RNTO(self, filename):
-        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename) 
+        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
         log('RNTO', pathname)
         if not os.path.exists(os.path.sep):
             self.commSock.send('550 RNTO failed File or Direcotry  %s not exists.\r\n' % pathname)
@@ -292,7 +268,7 @@ class ftpServerProtocol(threading.Thread):
         log('REST', self.pos)
         self.rest = True
         self.commSock.send('250 File position reseted.\r\n')
- 
+
     def RETR(self, filename):
         pathname = os.path.join(self.cwd, filename)
         log('RETR', pathname)
@@ -324,7 +300,7 @@ class ftpServerProtocol(threading.Thread):
     def STOR(self, filename):
         if not self.authenticated:
             self.commSock.send('530 STOR failed User not logged in.\r\n')
-            return 
+            return
 
         pathname = os.path.join(self.cwd, filename)
         log('STOR', pathname)
@@ -368,9 +344,9 @@ class ftpServerProtocol(threading.Thread):
 
         else:
             n = 1
-            while not os.path.exists(pathname): 
+            while not os.path.exists(pathname):
                 filename, extname = os.path.splitext(pathname)
-                pathname = filename + '(%s)' %n + extname 
+                pathname = filename + '(%s)' %n + extname
                 n += 1
 
             if self.mode == 'I':
@@ -379,7 +355,7 @@ class ftpServerProtocol(threading.Thread):
                 file = open(pathname, 'w')
             while True:
                 data = self.dataSock.recv(1024)
-                if not data: 
+                if not data:
                     break
                 file.write(data)
         file.close( )
@@ -407,21 +383,21 @@ class ftpServerProtocol(threading.Thread):
             CDUP Changes the working directory on the remote host to the parent of the current directory.
             DELE Deletes the specified remote file.
             MKD Creates the directory specified in the RemoteDirectory parameter on the remote host.
-            RNFR [old name] This directive specifies the old pathname of the file to be renamed. This command 
+            RNFR [old name] This directive specifies the old pathname of the file to be renamed. This command
                  must be followed by a "heavy Named "command to specify the new file pathname.
             RNTO [new name] This directive indicates the above "Rename" command mentioned in the new path name
                  of the file. These two Directive together to complete renaming files.
             REST [position] Marks the beginning (REST) ​​The argument on behalf of the server you want to re-start
                  the file transfer. This command and Do not send files, but skip the file specified data checkpoint.
-            RETR This command allows server-FTP send a copy of a file with the specified path name to the data 
+            RETR This command allows server-FTP send a copy of a file with the specified path name to the data
                  connection The other end.
-            STOR This command allows server-DTP to receive data transmitted via a data connection, and data is 
+            STOR This command allows server-DTP to receive data transmitted via a data connection, and data is
                  stored as A file server site.
             APPE This command allows server-DTP to receive data transmitted via a data connection, and data is stored
                  as A file server site.
             SYS  This command is used to find the server's operating system type.
             HELP Displays help information.
-            QUIT This command terminates a user, if not being executed file transfer, the server will shut down 
+            QUIT This command terminates a user, if not being executed file transfer, the server will shut down
                  Control connection\r\n.
             """
         self.commSock.send(help)
@@ -447,7 +423,7 @@ def serverListener( ):
     log('Server started', 'Listen on: %s, %s' % listen_sock.getsockname( ))
     while True:
         connection, address = listen_sock.accept( )
-        f = ftpServerProtocol(connection, address)
+        f = FtpServerProtocol(connection, address)
         f.start( )
         log('Accept', 'Created a new connection %s, %s' % address)
 

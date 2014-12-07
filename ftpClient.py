@@ -1,31 +1,31 @@
 #!/usr/bin/env python
-# --*--coding: utf8 --*--
+#--*--encoding:utf8--*--
 
 from PyQt4 import QtGui
 from PyQt4.QtCore import *
 from ftplib import FTP as ftp
 from get_fileProperty import fileProperty
-from dialog import loginDialog, progressDialog, downloadProgressWidget, uploadProgressWidget
+from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 import os
 import threading
 
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
 
 #---------------------------------------------------------------------------------#
-## The baseGuiWidget provide localGuiWidget and remoteGuiWidget to inheritance,  ##
+## The BaseGuiWidget provide LocalGuiWidget and RemoteGuiWidget to inheritance,  ##
 ## because this program has main of two widgets, local and remote file list with ##
 ## control widget, they are similar interface, so I write the superclass         ##
 #---------------------------------------------------------------------------------#
-class baseGuiWidget(QtGui.QWidget):
+class BaseGuiWidget(QtGui.QWidget):
     def __init__(self, parent=None):
-        super(baseGuiWidget, self).__init__(parent)
+        super(BaseGuiWidget, self).__init__(parent)
         self.resize(600, 600)
         self.createFileListWidget( )
         self.createGroupboxWidget( )
 
         # setting column width
         for pos, width in enumerate((150, 70, 70, 70, 90, 90)):
-            self.fileList.setColumnWidth(pos, width) 
+            self.fileList.setColumnWidth(pos, width)
 
         self.mainLayout = QtGui.QVBoxLayout( )
         self.mainLayout.addWidget(self.groupBox)
@@ -38,6 +38,7 @@ class baseGuiWidget(QtGui.QWidget):
         self.completerModel = QtGui.QStringListModel( )
         completer.setModel(self.completerModel)
         self.pathEdit.setCompleter(completer)
+
 
     def createGroupboxWidget(self):
         self.pathEdit   = QtGui.QLineEdit( )
@@ -75,9 +76,9 @@ class baseGuiWidget(QtGui.QWidget):
         self.fileList.header().setStretchLastSection(False)
 
 
-class localGuiWidget(baseGuiWidget):
+class LocalGuiWidget(BaseGuiWidget):
     def __init__(self, parent=None):
-        baseGuiWidget.__init__(self, parent)
+        BaseGuiWidget.__init__(self, parent)
         self.uploadButton  = QtGui.QPushButton( )
         self.connectButton = QtGui.QPushButton( )
         self.uploadButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'upload.png')))
@@ -87,9 +88,9 @@ class localGuiWidget(baseGuiWidget):
         self.groupBox.setTitle('Local')
 
 
-class remoteGuiWidget(baseGuiWidget):
+class RemoteGuiWidget(BaseGuiWidget):
     def __init__(self, parent=None):
-        baseGuiWidget.__init__(self, parent)
+        BaseGuiWidget.__init__(self, parent)
         self.downloadButton = QtGui.QPushButton( )
         self.downloadButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'download.png')))
         self.homeButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'internet.png')))
@@ -97,9 +98,9 @@ class remoteGuiWidget(baseGuiWidget):
         self.groupBox.setTitle('Remote')
 
 
-class ftpClient(QtGui.QWidget):
+class FtpClient(QtGui.QWidget):
     def __init__(self, parent=None):
-        super(ftpClient, self).__init__(parent)
+        super(FtpClient, self).__init__(parent)
         self.ftp = ftp( )
         self.setupGui( )
         self.downloads=[ ]
@@ -110,7 +111,7 @@ class ftpClient(QtGui.QWidget):
         self.remote.nextButton.clicked.connect(self.cdToRemoteNextDirectory)
         self.remote.downloadButton.clicked.connect(self.download)
         QObject.connect(self.remote.pathEdit, SIGNAL('returnPressed( )'), self.cdToRemotePath)
-        
+
         self.local.homeButton.clicked.connect(self.cdToLocalHomeDirectory)
         self.local.fileList.itemDoubleClicked.connect(self.cdToLocalDirectory)
         self.local.fileList.itemClicked.connect(lambda: self.local.uploadButton.setEnabled(True))
@@ -120,12 +121,12 @@ class ftpClient(QtGui.QWidget):
         self.local.connectButton.clicked.connect(self.connect)
         QObject.connect(self.local.pathEdit, SIGNAL('returnPressed( )'), self.cdToLocalPath)
 
-        self.progressDialog = progressDialog(self)
+        self.progressDialog = ProgressDialog(self)
 
     def setupGui(self):
         self.resize(1200, 650)
-        self.local  = localGuiWidget(self)
-        self.remote = remoteGuiWidget(self)
+        self.local  = LocalGuiWidget(self)
+        self.remote = RemoteGuiWidget(self)
         mainLayout = QtGui.QHBoxLayout( )
         mainLayout.addWidget(self.remote)
         mainLayout.addWidget(self.local)
@@ -171,7 +172,7 @@ class ftpClient(QtGui.QWidget):
         self.ftp.passwd = passwd
         self.ftp.login(user=user, passwd=passwd)
         self.initialize( )
-    
+
     '''
     def connect(self, address, port=21, timeout=10):
         from urlparse import urlparse
@@ -202,7 +203,7 @@ class ftpClient(QtGui.QWidget):
 
     def loadToLocaFileList(self):
         """
-        load file and directory list from local computer 
+        load file and directory list from local computer
         """
         self.localWordList = [ ]
         self.localDir      = { }
@@ -215,7 +216,7 @@ class ftpClient(QtGui.QWidget):
         mode, num, owner, group, size, date, filename = self.parseFileInfo(content)
         if content.startswith('d'):
             icon     = QtGui.QIcon(os.path.join(app_icon_path, 'folder.png'))
-            pathname = os.path.join(self.pwd, filename) 
+            pathname = os.path.join(self.pwd, filename)
             self.remoteDir[ pathname] = True
             self.remoteWordList.append(filename)
 
@@ -298,7 +299,7 @@ class ftpClient(QtGui.QWidget):
             self.remote.backButton.setEnabled(True)
         else:
             self.remote.backButton.setEnabled(False)
-        
+
         if pathname != self.remoteOriginPath:
             self.remote.homeButton.setEnabled(True)
         else:
@@ -338,7 +339,7 @@ class ftpClient(QtGui.QWidget):
         pathname = pathname.endswith(os.path.sep) and pathname or os.path.join(self.local_pwd, pathname)
         if not os.path.exists(pathname) and not os.path.isdir(pathname):
             return
-            
+
         else:
             self.localBrowseRec.append(pathname)
             self.local_pwd = pathname
@@ -413,7 +414,7 @@ class ftpClient(QtGui.QWidget):
         srcfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
         filesize = int(item.text(1))
         dstfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8( )))
-        pb = downloadProgressWidget(text=srcfile)
+        pb = DownloadProgressWidget(text=srcfile)
         pb.set_max(filesize)
         self.progressDialog.addProgressbar(pb)
         self.progressDialog.show( )
@@ -438,7 +439,7 @@ class ftpClient(QtGui.QWidget):
         filesize = int(item.text(1))
         dstfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
 
-        pb = uploadProgressWidget(text=dstfile)
+        pb = UploadProgressWidget(text=dstfile)
         pb.set_max(filesize)
         self.progressDialog.addProgressbar(pb)
         self.progressDialog.show( )
@@ -447,7 +448,7 @@ class ftpClient(QtGui.QWidget):
 
         def __callback(buf):
             pb.set_value(buf)
-        
+
         def __upload( ):
             fp = ftp( )
             fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
@@ -456,8 +457,7 @@ class ftpClient(QtGui.QWidget):
         threading.Thread(target=__upload).start( )
 
 if __name__ == '__main__':
-    import sys
     app = QtGui.QApplication(sys.argv)
-    client = ftpClient( )
+    client = FtpClient( )
     client.show( )
     app.exec_( )

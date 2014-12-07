@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # --*--codig: utf8 --*--
 
-from PyQt4 import QtGui 
-from PyQt4 import QtCore 
+from PyQt4 import QtGui
+from PyQt4 import QtCore
 
 class LoginDialog(QtGui.QDialog):
     def __init__(self, parent=None):
@@ -59,11 +59,12 @@ class LoginDialog(QtGui.QDialog):
             self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
         elif self.nameEdit.text( ) and self.registerRadio.isChecked( ):
             self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
-            
+
     def enableEdit(self):
         self.nameEdit.setEnabled(True)
         self.passwdEdit.setEnabled(True)
         self.checkNameEdit( )
+        self.checkNameField( )
 
     def disableEdit(self):
         self.nameEdit.setEnabled(False)
@@ -71,10 +72,10 @@ class LoginDialog(QtGui.QDialog):
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setFocus( )
 
 
-class baseProgressWidget(QtGui.QWidget):
+class BaseProgressWidget(QtGui.QWidget):
     updateProgress = QtCore.pyqtSignal(str)
     def __init__(self, text='', parent=None):
-        super(baseProgressWidget, self).__init__(parent)
+        super(BaseProgressWidget, self).__init__(parent)
         self.setFixedHeight(50)
         self.text  = text
         self.progressbar = QtGui.QProgressBar( )
@@ -112,7 +113,7 @@ class baseProgressWidget(QtGui.QWidget):
         self.progressbar.setMaximum(value)
 
 
-class downloadProgressWidget(baseProgressWidget):
+class DownloadProgressWidget(BaseProgressWidget):
     def __init__(self, text='Downloading', parent=None):
         super(self.__class__, self).__init__(text, parent)
         style ="""
@@ -129,7 +130,7 @@ class downloadProgressWidget(baseProgressWidget):
         self.progressbar.setStyleSheet(style)
 
 
-class uploadProgressWidget(baseProgressWidget):
+class UploadProgressWidget(BaseProgressWidget):
     def __init__(self, text='Uploading', parent=None):
         super(self.__class__, self).__init__(text, parent)
         style ="""
@@ -145,8 +146,7 @@ class uploadProgressWidget(baseProgressWidget):
         }"""
         self.progressbar.setStyleSheet(style)
 
-
-class progressDialog(QtGui.QMainWindow):
+class ProgressDialog(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         self.resize(500, 250)
@@ -180,7 +180,7 @@ if __name__ == '__main__':
         print(loginDialog( ))
 
     def testProgressDialog( ):
-        p = progressDialog( )
+        p = ProgressDialog( )
 
     def testProgressDialog( ):
         import random
@@ -188,20 +188,20 @@ if __name__ == '__main__':
         progresses = [ ]
         while len(progresses) <= 20: progresses.append(random.choice(number))
         app = QtGui.QApplication([])
-        w = progressDialog( )
+        w = ProgressDialog( )
         for i in progresses:
-            pb = downloadProgressWidget(text='download')
+            pb = DownloadProgressWidget(text='download')
             pb.set_max(100)
             pb.set_value(' '*i)
             w.addProgressbar(pb)
 
         for i in progresses:
-            pb = uploadProgressWidget(text='upload')
+            pb = UploadProgressWidget(text='upload')
             pb.set_max(100)
             pb.set_value(' '*i)
             w.addProgressbar(pb)
-        
         w.show( )
         app.exec_( )
+
     testProgressDialog( )
     testLoinDialog( )
