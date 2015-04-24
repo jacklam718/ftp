@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 #!/usr/bin/env python
 # --*--codig: utf8 --*--
+=======
+#!/usr/bin/python
+>>>>>>> changed class naming convention
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore

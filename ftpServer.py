@@ -19,6 +19,10 @@ def log(func, cmd):
         logmsg = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
         print("\033[31m%s\033[0m: \033[32m%s\033[0m" % (logmsg, cmd))
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> changed class naming convention
 class FtpServerProtocol(threading.Thread):
     def __init__(self, commSock, address):
         threading.Thread.__init__(self)
