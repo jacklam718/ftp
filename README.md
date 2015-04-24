@@ -2,7 +2,7 @@ About this project
 ==================
 This is FTP server & client, the client using PyQt GUI framework
 
-#Why I create this project
+#Why I create this project?
 Because Qt framework seems a powerful framework and interesting, so I want to learn and try this framework, another reason I'm interested in the many Internet Protocols the FTP is one of them.
 
 #Dependencies
