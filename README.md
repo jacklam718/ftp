@@ -8,7 +8,7 @@ Because Qt framework seems a powerful framework and interesting, so I want to le
 #Dependencies
 PyQt4.x
 
-#Run the programe
+#Usage
 
 `python ftpServer.py`<br>
 `python ftpClient.py`
