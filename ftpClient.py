@@ -7,6 +7,7 @@ from ftplib import FTP as ftp
 from get_fileProperty import fileProperty
 from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 import os
+import sys
 import threading
 
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
