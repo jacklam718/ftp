@@ -9,9 +9,10 @@ Because Qt framework seems a powerful framework and interesting, so I want to le
 PyQt4.x
 
 #Usage
-
-`python ftpServer.py`<br>
-`python ftpClient.py`
+```bash
+$ python ftpServer.py
+$ python ftpClient.py
+```
 
 >Note:
 When you run ftpServer.py you may need permission because the ftp server port default run on 20 & 21, may you can run `sudo python ftpServer.py`
