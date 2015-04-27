@@ -17,7 +17,7 @@ PyQt4.x
 When you run ftpServer.py you may need permission because the ftp server port default run on 20 & 21, may you can run `sudo python ftpServer.py`
 
 #Platform
-Currently can only run on Linux like OS etc. Ubuntu, Mac OSX
+Currently can only run on Linux like OS e.g Ubuntu, Mac OSX etc.
 
 #Screenshots
 ##### ftp server
