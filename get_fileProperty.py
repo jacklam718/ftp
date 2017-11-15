@@ -22,7 +22,7 @@ def fileProperty(filepath):
         fullmode = ''
         fullmode += os.path.isdir(filepath) and 'd' or '-'
 
-        for i in xrange(9):
+        for i in range(9):
             fullmode += bool(mode & modes[i]) and 'rwxrwxrwx'[i] or '-'
         return fullmode
 

@@ -11,7 +11,10 @@ import time
 
 allow_delete = False
 
-HOST = socket.gethostbyname(socket.gethostname( ))
+try:
+    HOST = socket.gethostbyname(socket.gethostname( ))
+except socket.gaierror:
+    HOST = '127.0.0.1'
 PORT = 21  # command port
 CWD  = os.getenv('HOME')
 
@@ -33,10 +36,14 @@ class FtpServerProtocol(threading.Thread):
         """
         receive commands from client and execute commands
         """
-        self.sendWelcome( )
+        self.sendWelcome()
         while True:
             try:
-                cmd = self.commSock.recv(1024).rstrip( )
+                data = self.commSock.recv(1024).rstrip()
+                try:
+                    cmd = data.decode('utf-8')
+                except AttributeError:
+                    cmd = data
                 log('Received data', cmd)
                 if not cmd:
                     break
@@ -48,7 +55,7 @@ class FtpServerProtocol(threading.Thread):
                 func = getattr(self, cmd)
                 func(arg)
             except AttributeError as err:
-                self.commSock.send('500 Syntax error, command unrecognized. '
+                self.sendCommand('500 Syntax error, command unrecognized. '
                     'This may include errors such as command line too long.\r\n')
                 log('Receive', err)
 
@@ -77,28 +84,34 @@ class FtpServerProtocol(threading.Thread):
         except socket.error as err:
             log('stopDataSock', err)
 
+    def sendCommand(self, cmd):
+        self.commSock.send(cmd.encode('utf-8'))
+
+    def sendData(self, data):
+        self.dataSock.send(data.encode('utf-8'))
+
     #------------------------------#
     ## Ftp services and functions ##
     #------------------------------#
     def USER(self, user):
         log("USER", user)
         if not user:
-            self.commSock.send('501 Syntax error in parameters or arguments.\r\n')
+            self.sendCommand('501 Syntax error in parameters or arguments.\r\n')
 
         else:
-            self.commSock.send('331 User name okay, need password.\r\n')
+            self.sendCommand('331 User name okay, need password.\r\n')
             self.username = user
 
     def PASS(self, passwd):
         log("PASS", passwd)
         if not passwd:
-            self.commSock.send('501 Syntax error in parameters or arguments.\r\n')
+            self.sendCommand('501 Syntax error in parameters or arguments.\r\n')
 
         elif not self.username:
-            self.commSock.send('503 Bad sequence of commands.\r\n')
+            self.sendCommand('503 Bad sequence of commands.\r\n')
 
         else:
-            self.commSock.send('230 User logged in, proceed.\r\n')
+            self.sendCommand('230 User logged in, proceed.\r\n')
             self.passwd = passwd
             self.authenticated = True
 
@@ -106,9 +119,9 @@ class FtpServerProtocol(threading.Thread):
         log('TYPE', type)
         self.mode = type
         if self.mode == 'I':
-            self.commSock.send('200 Binary mode.\r\n')
+            self.sendCommand('200 Binary mode.\r\n')
         elif self.mode == 'A':
-            self.commSock.send('200 Ascii mode.\r\n')
+            self.sendCommand('200 Ascii mode.\r\n')
 
     def PASV(self, cmd):
         log("PASV", cmd)
@@ -118,11 +131,11 @@ class FtpServerProtocol(threading.Thread):
         self.serverSock.bind((HOST, 0))
         self.serverSock.listen(5)
         addr, port = self.serverSock.getsockname( )
-        #self.commSock.send('277 Entering Passve mode (%s,%d,%d).\r\n' %
+        #self.sendCommand('277 Entering Passve mode (%s,%d,%d).\r\n' %
           #  (addr.replace('.', ','), (port / 256), (port % 256)))
-        #self.commSock.send('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
-        #self.commSock.send('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
-        self.commSock.send('227 Entering Passive Mode (%s,%u,%u).\r\n' %
+        #self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
+        #self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
+        self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' %
                 (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
 
     '''
@@ -132,7 +145,7 @@ class FtpServerProtocol(threading.Thread):
         ip, p1, p2 = ('.'.join(pair[:4]), pair[5], pair[6])
         self.dataSockAddr = ip
         self.dataSockPort = (256 * p1) + p2
-        self.commSock.send('200 Ok.\r\n')
+        self.sendCommand('200 Ok.\r\n')
     '''
     def PORT(self,cmd):
         log("PORT: ", cmd)
@@ -142,11 +155,11 @@ class FtpServerProtocol(threading.Thread):
         l=cmd[5:].split(',')
         self.dataSockAddr='.'.join(l[:4])
         self.dataSockPort=(int(l[4])<<8)+int(l[5])
-        self.commSock.send('200 Get port.\r\n')
+        self.sendCommand('200 Get port.\r\n')
 
     def LIST(self, dirpath):
         if not self.authenticated:
-            self.commSock.send('530 User not logged in.\r\n')
+            self.sendCommand('530 User not logged in.\r\n')
             return
 
         if not dirpath:
@@ -158,13 +171,13 @@ class FtpServerProtocol(threading.Thread):
 
         log('LIST', pathname)
         if not self.authenticated:
-            self.commSock.send('530 User not logged in.\r\n')
+            self.sendCommand('530 User not logged in.\r\n')
 
         elif not os.path.exists(pathname):
-            self.commSock.send('550 LIST failed Path name not exists.\r\n')
+            self.sendCommand('550 LIST failed Path name not exists.\r\n')
 
         else:
-            self.commSock.send('150 Here is listing.\r\n')
+            self.sendCommand('150 Here is listing.\r\n')
             self.startDataSock( )
             if not os.path.isdir(pathname):
                 fileMessage = fileProperty(pathname)
@@ -173,9 +186,9 @@ class FtpServerProtocol(threading.Thread):
             else:
                 for file in os.listdir(pathname):
                     fileMessage = fileProperty(os.path.join(pathname, file))
-                    self.dataSock.send(fileMessage+'\r\n')
+                    self.sendData(fileMessage+'\r\n')
             self.stopDataSock( )
-            self.commSock.send('226 List done.\r\n')
+            self.sendCommand('226 List done.\r\n')
 
     def NLIST(self, dirpath):
         self.LIST(dirpath)
@@ -184,25 +197,25 @@ class FtpServerProtocol(threading.Thread):
         pathname = dirpath.endswith(os.path.sep) and dirpath or os.path.join(self.cwd, dirpath)
         log('CWD', pathname)
         if not os.path.exists(pathname) or not os.path.isdir(pathname):
-            self.commSock.send('550 CWD failed Directory not exists.\r\n')
+            self.sendCommand('550 CWD failed Directory not exists.\r\n')
             return
         self.cwd = pathname
-        self.commSock.send('250 CWD Command successful.\r\n')
+        self.sendCommand('250 CWD Command successful.\r\n')
 
     def PWD(self, cmd):
         log('PWD', cmd)
-        self.commSock.send('257 "%s".\r\n' % self.cwd)
+        self.sendCommand('257 "%s".\r\n' % self.cwd)
 
     def CDUP(self, cmd):
         self.cwd = os.path.abspath(os.path.join(self.cwd, '..'))
         log('CDUP', self.cwd)
-        self.commSock.send('200 Ok.\r\n')
+        self.sendCommand('200 Ok.\r\n')
 
     def DELE(self, filename):
         pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
         log('DELE', pathname)
         if not self.authenticated:
-            self.commSock.send('530 User not logged in.\r\n')
+            self.sendCommand('530 User not logged in.\r\n')
 
         elif not os.path.exists(pathname):
             self.send('550 DELE failed File %s not exists.\r\n' % pathname)
@@ -212,43 +225,43 @@ class FtpServerProtocol(threading.Thread):
 
         else:
             os.remove(pathname)
-            self.commSock.send('250 File deleted.\r\n')
+            self.sendCommand('250 File deleted.\r\n')
 
     def MKD(self, dirname):
         pathname = dirname.endswith(os.path.sep) and dirname or os.path.join(self.cwd, dirname)
         log('MKD', pathname)
         if not self.authenticated:
-            self.commSock.send('530 User not logged in.\r\n')
+            self.sendCommand('530 User not logged in.\r\n')
 
         else:
             try:
                 os.mkdir(pathname)
-                self.commSock.send('257 Directory created.\r\n')
+                self.sendCommand('257 Directory created.\r\n')
             except OSError:
-                self.commSock.send('550 MKD failed Directory "%s" already exists.\r\n' % pathname)
+                self.sendCommand('550 MKD failed Directory "%s" already exists.\r\n' % pathname)
 
     def RMD(self, dirname):
         import shutil
         pathname = dirname.endswith(os.path.sep) and dirname or os.path.join(self.cwd, dirname)
         log('RMD', pathname)
         if not self.authenticated:
-            self.commSock.send('530 User not logged in.\r\n')
+            self.sendCommand('530 User not logged in.\r\n')
 
         elif not allow_delete:
-            self.commSock.send('450 Directory deleted.\r\n')
+            self.sendCommand('450 Directory deleted.\r\n')
 
         elif not os.path.exists(pathname):
-            self.commSock.send('550 RMDIR failed Directory "%s" not exists.\r\n' % pathname)
+            self.sendCommand('550 RMDIR failed Directory "%s" not exists.\r\n' % pathname)
 
         else:
             shutil.rmtree(pathname)
-            self.commSock.send('250 Directory deleted.\r\n')
+            self.sendCommand('250 Directory deleted.\r\n')
 
     def RNFR(self, filename):
         pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
         log('RNFR', pathname)
         if not os.path.exists(pathname):
-            self.commSock.send('550 RNFR failed File or Directory %s not exists.\r\n' % pathname)
+            self.sendCommand('550 RNFR failed File or Directory %s not exists.\r\n' % pathname)
         else:
             self.rnfr = pathname
 
@@ -256,7 +269,7 @@ class FtpServerProtocol(threading.Thread):
         pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
         log('RNTO', pathname)
         if not os.path.exists(os.path.sep):
-            self.commSock.send('550 RNTO failed File or Direcotry  %s not exists.\r\n' % pathname)
+            self.sendCommand('550 RNTO failed File or Direcotry  %s not exists.\r\n' % pathname)
         else:
             try:
                 os.rename(self.rnfr, pathname)
@@ -267,7 +280,7 @@ class FtpServerProtocol(threading.Thread):
         self.pos  = int(pos)
         log('REST', self.pos)
         self.rest = True
-        self.commSock.send('250 File position reseted.\r\n')
+        self.sendCommand('250 File position reseted.\r\n')
 
     def RETR(self, filename):
         pathname = os.path.join(self.cwd, filename)
@@ -282,7 +295,7 @@ class FtpServerProtocol(threading.Thread):
         except OSError as err:
             log('RETR', err)
 
-        self.commSock.send('150 Opening data connection.\r\n')
+        self.sendCommand('150 Opening data connection.\r\n')
         if self.rest:
             file.seek(self.pos)
             self.rest = False
@@ -291,15 +304,15 @@ class FtpServerProtocol(threading.Thread):
         while True:
             data = file.read(1024)
             if not data: break
-            self.dataSock.send(data)
+            self.sendData(data)
         file.close( )
         self.stopDataSock( )
-        self.commSock.send('226 Transfer complete.\r\n')
+        self.sendCommand('226 Transfer complete.\r\n')
 
 
     def STOR(self, filename):
         if not self.authenticated:
-            self.commSock.send('530 STOR failed User not logged in.\r\n')
+            self.sendCommand('530 STOR failed User not logged in.\r\n')
             return
 
         pathname = os.path.join(self.cwd, filename)
@@ -312,7 +325,7 @@ class FtpServerProtocol(threading.Thread):
         except OSError as err:
             log('STOR', err)
 
-        self.commSock.send('150 Opening data connection.\r\n' )
+        self.sendCommand('150 Opening data connection.\r\n' )
         self.startDataSock( )
         while True:
             data = self.dataSock.recv(1024)
@@ -320,16 +333,16 @@ class FtpServerProtocol(threading.Thread):
             file.write(data)
         file.close( )
         self.stopDataSock( )
-        self.commSock.send('226 Transfer completed.\r\n')
+        self.sendCommand('226 Transfer completed.\r\n')
 
     def APPE(self, filename):
         if not self.authenticated:
-            self.commSock.send('530 APPE failed User not logged in.\r\n')
+            self.sendCommand('530 APPE failed User not logged in.\r\n')
             return
 
         pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
         log('APPE', pathname)
-        self.commSock.send('150 Opening data connection.\r\n')
+        self.sendCommand('150 Opening data connection.\r\n')
         self.startDataSock( )
         if not os.path.exists(pathname):
             if self.mode == 'I':
@@ -360,11 +373,11 @@ class FtpServerProtocol(threading.Thread):
                 file.write(data)
         file.close( )
         self.stopDataSock( )
-        self.commSock.send('226 Transfer completed.\r\n')
+        self.sendCommand('226 Transfer completed.\r\n')
 
     def SYST(self, arg):
         log('SYS', arg)
-        self.commSock.send('215 %s type.\r\n' % sys.platform)
+        self.sendCommand('215 %s type.\r\n' % sys.platform)
 
     def HELP(self, arg):
         log('HELP', arg)
@@ -400,17 +413,17 @@ class FtpServerProtocol(threading.Thread):
             QUIT This command terminates a user, if not being executed file transfer, the server will shut down
                  Control connection\r\n.
             """
-        self.commSock.send(help)
+        self.sendCommand(help)
 
     def QUIT(self, arg):
         log('QUIT', arg)
-        self.commSock.send('221 Goodbye.\r\n')
+        self.sendCommand('221 Goodbye.\r\n')
 
     def sendWelcome(self):
         """
         when connection created with client will send a welcome message to the client
         """
-        self.commSock.send('220 Welcome.\r\n')
+        self.sendCommand('220 Welcome.\r\n')
 
 
 def serverListener( ):
@@ -432,7 +445,11 @@ if __name__ == "__main__":
     log('Start ftp server', 'Enter q or Q to stop ftpServer...')
     listener = threading.Thread(target=serverListener)
     listener.start( )
-    if raw_input( ).lower() == "q":
+
+    if sys.version_info[0] < 3:
+        input = raw_input
+
+    if input().lower() == "q":
         listen_sock.close( )
         log('Server stop', 'Server closed')
         sys.exit( )

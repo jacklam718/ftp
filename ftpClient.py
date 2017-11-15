@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 #--*--encoding:utf8--*--
 
-from PyQt4 import QtGui
-from PyQt4.QtCore import *
-from ftplib import FTP as ftp
-from get_fileProperty import fileProperty
-from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 import os
 import sys
-import threading
+from threading import Thread
+from ftplib import FTP
+from PyQt4 import QtGui
+from PyQt4.QtCore import *
+from get_fileProperty import fileProperty
+from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
 
@@ -102,7 +102,7 @@ class RemoteGuiWidget(BaseGuiWidget):
 class FtpClient(QtGui.QWidget):
     def __init__(self, parent=None):
         super(FtpClient, self).__init__(parent)
-        self.ftp = ftp( )
+        self.ftp = FTP( )
         self.setupGui( )
         self.downloads=[ ]
         self.remote.homeButton.clicked.connect(self.cdToRemoteHomeDirectory)
@@ -110,7 +110,7 @@ class FtpClient(QtGui.QWidget):
         self.remote.fileList.itemClicked.connect(lambda: self.remote.downloadButton.setEnabled(True))
         self.remote.backButton.clicked.connect(self.cdToRemoteBackDirectory)
         self.remote.nextButton.clicked.connect(self.cdToRemoteNextDirectory)
-        self.remote.downloadButton.clicked.connect(self.download)
+        self.remote.downloadButton.clicked.connect(lambda: Thread(target=self.download).start())
         QObject.connect(self.remote.pathEdit, SIGNAL('returnPressed( )'), self.cdToRemotePath)
 
         self.local.homeButton.clicked.connect(self.cdToLocalHomeDirectory)
@@ -118,7 +118,7 @@ class FtpClient(QtGui.QWidget):
         self.local.fileList.itemClicked.connect(lambda: self.local.uploadButton.setEnabled(True))
         self.local.backButton.clicked.connect(self.cdToLocalBackDirectory)
         self.local.nextButton.clicked.connect(self.cdToLocalNextDirectory)
-        self.local.uploadButton.clicked.connect(self.upload)
+        self.local.uploadButton.clicked.connect(lambda: Thread(target=self.upload).start())
         self.local.connectButton.clicked.connect(self.connect)
         QObject.connect(self.local.pathEdit, SIGNAL('returnPressed( )'), self.cdToLocalPath)
 
@@ -151,17 +151,29 @@ class FtpClient(QtGui.QWidget):
         pass
 
     def connect(self):
-        from urlparse import urlparse
-        host, ok = QtGui.QInputDialog.getText(self, 'Connect To Host', 'Host Address', QtGui.QLineEdit.Normal)
-        host = str(host.toUtf8( ))
         try:
+            from urlparse import urlparse
+        except ImportError:
+            from urllib.parse import urlparse
+
+
+        result = QtGui.QInputDialog.getText(self, 'Connect To Host', 'Host Address', QtGui.QLineEdit.Normal)
+        if not result[1]:
+            return
+        try:
+            host = result[0].toUtf8()
+        except AttributeError:
+            host = result[0]
+
+        try:
+            print(host)
             if urlparse(host).hostname:
                 self.ftp.connect(host=urlparse(host).hostname, port=21, timeout=10)
             else:
                 self.ftp.connect(host=host, port=21, timeout=10)
-            self.login( )
-        except:
-            pass
+            self.login()
+        except Exception as error:
+            raise error
 
     def login(self):
         ask = loginDialog(self)
@@ -269,7 +281,10 @@ class FtpClient(QtGui.QWidget):
     ## for remote file system ##
     #--------------------------#
     def cdToRemotePath(self):
-        pathname = str(self.remote.pathEdit.text( ).toUtf8( ))
+        try:
+            pathname = str(self.remote.pathEdit.text().toUtf8())
+        except AttributeError:
+            pathname = str(self.remote.pathEdit.text())
         try:
             self.ftp.cwd(pathname)
         except:
@@ -336,7 +351,10 @@ class FtpClient(QtGui.QWidget):
     ## for local file system ##
     #-------------------------#
     def cdToLocalPath(self):
-        pathname = str(self.local.pathEdit.text( ).toUtf8( ))
+        try:
+            pathname = str(self.local.pathEdit.text( ).toUtf8())
+        except AttributeError:
+            pathname = str(self.local.pathEdit.text())
         pathname = pathname.endswith(os.path.sep) and pathname or os.path.join(self.local_pwd, pathname)
         if not os.path.exists(pathname) and not os.path.isdir(pathname):
             return
@@ -410,52 +428,61 @@ class FtpClient(QtGui.QWidget):
     def isRemoteDir(self, dirname):
         return self.remoteDir.get(dirname, None)
 
-    def download(self):
-        item     = self.remote.fileList.currentItem( )
-        srcfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
-        filesize = int(item.text(1))
-        dstfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8( )))
-        pb = DownloadProgressWidget(text=srcfile)
+    def createDownloadProgressbar(self, title, filesize):
+        pb = DownloadProgressWidget(text=title)
         pb.set_max(filesize)
         self.progressDialog.addProgressbar(pb)
-        self.progressDialog.show( )
+        self.progressDialog.show()
+        return pb
 
-        file = open(dstfile, 'wb')
+    def createUploadProgressbar(self, title, filesize):
+        pb = UploadProgressWidget(text=title)
+        pb.set_max(filesize)
+        self.progressDialog.addProgressbar(pb)
+        self.progressDialog.show()
+        return pb
 
-        def __callback(data):
+    def download(self):
+        item     = self.remote.fileList.currentItem( )
+        filesize = int(item.text(1))
+
+        try:
+            srcfile  = os.path.join(self.pwd, str(item.text(0).toUtf8()))
+            dstfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8()))
+        except AttributeError:
+            srcfile  = os.path.join(self.pwd, str(item.text(0)))
+            dstfile  = os.path.join(self.local_pwd, str(item.text(0)))
+
+        pb = self.createDownloadProgressbar(srcfile, filesize)
+
+        def callback(data):
             pb.set_value(data)
             file.write(data)
 
-        # create a new ftp connection
-        def __download( ):
-            fp = ftp( )
-            fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
-            fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
-            fp.retrbinary(cmd='RETR '+srcfile, callback=__callback)
-        threading.Thread(target=__download).start( )
+        file = open(dstfile, 'wb')
+        fp = FTP( )
+        fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
+        fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
+        fp.retrbinary(cmd='RETR '+srcfile, callback=callback)
 
     def upload(self):
         item     = self.local.fileList.currentItem( )
-        srcfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8( )))
         filesize = int(item.text(1))
-        dstfile  = os.path.join(self.pwd, str(item.text(0).toUtf8( )))
 
-        pb = UploadProgressWidget(text=dstfile)
-        pb.set_max(filesize)
-        self.progressDialog.addProgressbar(pb)
-        self.progressDialog.show( )
+        try:
+            srcfile  = os.path.join(self.local_pwd, str(item.text(0).toUtf8()))
+            dstfile  = os.path.join(self.pwd, str(selected_item.text(0).toUtf8()))
+        except AttributeError:
+            srcfile  = os.path.join(self.local_pwd, str(item.text(0)))
+            dstfile  = os.path.join(self.pwd, str(selected_item.text(0)))
+
+        pb = self.createUploadProgressbar(srcfile, filesize)
 
         file = open(srcfile, 'rb')
-
-        def __callback(buf):
-            pb.set_value(buf)
-
-        def __upload( ):
-            fp = ftp( )
-            fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
-            fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
-            fp.storbinary(cmd='STOR '+dstfile, fp=file, callback=__callback)
-        threading.Thread(target=__upload).start( )
+        fp = FTP( )
+        fp.connect(host=self.ftp.host, port=self.ftp.port, timeout=self.ftp.timeout)
+        fp.login(user=self.ftp.user, passwd=self.ftp.passwd)
+        fp.storbinary(cmd='STOR '+dstfile, fp=file, callback=pb.set_value)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
