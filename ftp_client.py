@@ -11,6 +11,7 @@ from utils import fileProperty
 from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
+qIcon = lambda name: QtGui.QIcon(os.path.join(app_icon_path, name))
 
 #---------------------------------------------------------------------------------#
 ## The BaseGuiWidget provide LocalGuiWidget and RemoteGuiWidget to inheritance,  ##
@@ -46,9 +47,9 @@ class BaseGuiWidget(QtGui.QWidget):
         self.homeButton = QtGui.QPushButton( )
         self.backButton = QtGui.QPushButton( )
         self.nextButton = QtGui.QPushButton( )
-        self.homeButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'home.png')))
-        self.backButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'back.png')))
-        self.nextButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'next.png')))
+        self.homeButton.setIcon(qIcon('home.png'))
+        self.backButton.setIcon(qIcon('back.png'))
+        self.nextButton.setIcon(qIcon('next.png'))
         self.homeButton.setIconSize(QSize(20, 20))
         self.homeButton.setEnabled(False)
         self.backButton.setEnabled(False)
@@ -82,8 +83,8 @@ class LocalGuiWidget(BaseGuiWidget):
         BaseGuiWidget.__init__(self, parent)
         self.uploadButton  = QtGui.QPushButton( )
         self.connectButton = QtGui.QPushButton( )
-        self.uploadButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'upload.png')))
-        self.connectButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'connect.png')))
+        self.uploadButton.setIcon(qIcon('upload.png'))
+        self.connectButton.setIcon(qIcon('connect.png'))
         self.hbox2.addWidget(self.uploadButton)
         self.hbox2.addWidget(self.connectButton)
         self.groupBox.setTitle('Local')
@@ -93,8 +94,8 @@ class RemoteGuiWidget(BaseGuiWidget):
     def __init__(self, parent=None):
         BaseGuiWidget.__init__(self, parent)
         self.downloadButton = QtGui.QPushButton( )
-        self.downloadButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'download.png')))
-        self.homeButton.setIcon(QtGui.QIcon(os.path.join(app_icon_path, 'internet.png')))
+        self.downloadButton.setIcon(qIcon('download.png'))
+        self.homeButton.setIcon(qIcon('internet.png'))
         self.hbox2.addWidget(self.downloadButton)
         self.groupBox.setTitle('Remote')
 
@@ -228,13 +229,13 @@ class FtpClient(QtGui.QWidget):
     def addItemToRemoteFileList(self, content):
         mode, num, owner, group, size, date, filename = self.parseFileInfo(content)
         if content.startswith('d'):
-            icon     = QtGui.QIcon(os.path.join(app_icon_path, 'folder.png'))
+            icon     = qIcon('folder.png')
             pathname = os.path.join(self.pwd, filename)
             self.remoteDir[ pathname] = True
             self.remoteWordList.append(filename)
 
         else:
-            icon = QtGui.QIcon(os.path.join(app_icon_path, 'file.png'))
+            icon = qIcon('file.png')
 
         item = QtGui.QTreeWidgetItem( )
         item.setIcon(0, icon)
@@ -249,13 +250,13 @@ class FtpClient(QtGui.QWidget):
     def addItemToLocalFileList(self, content):
         mode, num, owner, group, size, date, filename = self.parseFileInfo(content)
         if content.startswith('d'):
-            icon     = QtGui.QIcon(os.path.join(app_icon_path, 'folder.png'))
+            icon     = qIcon('folder.png')
             pathname = os.path.join(self.local_pwd, filename)
             self.localDir[ pathname ] = True
             self.localWordList.append(filename)
 
         else:
-            icon = QtGui.QIcon(os.path.join(app_icon_path, 'file.png'))
+            icon = qIcon('file.png')
 
         item  = QtGui.QTreeWidgetItem( )
         item.setIcon(0, icon)
