@@ -7,7 +7,7 @@ from threading import Thread
 from ftplib import FTP
 from PyQt4 import QtGui
 from PyQt4.QtCore import *
-from get_fileProperty import fileProperty
+from utils import fileProperty
 from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 
 app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
@@ -428,20 +428,6 @@ class FtpClient(QtGui.QWidget):
     def isRemoteDir(self, dirname):
         return self.remoteDir.get(dirname, None)
 
-    def createDownloadProgressbar(self, title, filesize):
-        pb = DownloadProgressWidget(text=title)
-        pb.set_max(filesize)
-        self.progressDialog.addProgressbar(pb)
-        self.progressDialog.show()
-        return pb
-
-    def createUploadProgressbar(self, title, filesize):
-        pb = UploadProgressWidget(text=title)
-        pb.set_max(filesize)
-        self.progressDialog.addProgressbar(pb)
-        self.progressDialog.show()
-        return pb
-
     def download(self):
         item     = self.remote.fileList.currentItem( )
         filesize = int(item.text(1))
@@ -453,7 +439,11 @@ class FtpClient(QtGui.QWidget):
             srcfile  = os.path.join(self.pwd, str(item.text(0)))
             dstfile  = os.path.join(self.local_pwd, str(item.text(0)))
 
-        pb = self.createDownloadProgressbar(srcfile, filesize)
+        pb = self.progressDialog.addProgress(
+            type='download',
+            title=srcfile,
+            size=filesize,
+        )
 
         def callback(data):
             pb.set_value(data)
@@ -476,7 +466,11 @@ class FtpClient(QtGui.QWidget):
             srcfile  = os.path.join(self.local_pwd, str(item.text(0)))
             dstfile  = os.path.join(self.pwd, str(selected_item.text(0)))
 
-        pb = self.createUploadProgressbar(srcfile, filesize)
+        pb = self.progressDialog.addProgress(
+            type='upload',
+            title=srcfile,
+            size=filesize,
+        )
 
         file = open(srcfile, 'rb')
         fp = FTP( )

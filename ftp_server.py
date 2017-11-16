@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # --*-- coding: utf-8 --*--
 
-from get_fileProperty import fileProperty
 import socket
 import threading
 import os
 import stat
 import sys
 import time
+from utils import fileProperty
 
 allow_delete = False
 
