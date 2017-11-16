@@ -167,7 +167,6 @@ class FtpClient(QtGui.QWidget):
             host = result[0]
 
         try:
-            print(host)
             if urlparse(host).hostname:
                 self.ftp.connect(host=urlparse(host).hostname, port=21, timeout=10)
             else:
