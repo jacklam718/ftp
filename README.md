@@ -3,19 +3,19 @@ About this project
 This is FTP server & client, client using PyQt GUI framework
 
 #Why I create this project?
-Because Qt framework seems a powerful framework and interesting, so I want to learn and try this framework, another reason I'm interested in the many Internet Protocols the FTP is one of my interests Internet Protocol.
+Because Qt framework seems a powerful and interesting framework, so I want to learn and try this framework. Another reason I'm interested about `Internet Protocols` including the FTP Protocol so I want to try to implement FTP Protocol.
 
 #Dependencies
 PyQt4.x
 
 #Usage
 ```bash
-$ python ftpServer.py
-$ python ftpClient.py
+$ python ftp_server.py
+$ python ftp_client.py
 ```
 
 >Note:
-When you run ftpServer.py you may need permission because the ftp server port default run on 20 & 21, may you can run `sudo python ftpServer.py`
+When you run ftp_server.py you may need permission because the ftp server port default run on 20 & 21, may you can run `sudo python ftp_server.py`
 
 #Platform
 Currently can only run on Linux like OS e.g Ubuntu, Mac OSX etc.
