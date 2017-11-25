@@ -164,7 +164,7 @@ class FtpClient(QtGui.QWidget):
         try:
             host = result[0].toUtf8()
         except AttributeError:
-            host = result[0]
+            host = str(result[0])
 
         try:
             if urlparse(host).hostname:
