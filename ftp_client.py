@@ -162,7 +162,7 @@ class FtpClient(QtGui.QWidget):
         if not result[1]:
             return
         try:
-            host = result[0].toUtf8()
+            host = str(result[0].toUtf8())
         except AttributeError:
             host = str(result[0])
 
