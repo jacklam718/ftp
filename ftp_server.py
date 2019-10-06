@@ -8,7 +8,7 @@ import stat
 import sys
 import time
 from utils import fileProperty
-
+import pam
 allow_delete = False
 
 try:
@@ -109,7 +109,12 @@ class FtpServerProtocol(threading.Thread):
 
         elif not self.username:
             self.sendCommand('503 Bad sequence of commands.\r\n')
-
+            
+        elif not pam.pam().authenticate(self.username, passwd):
+            self.sendCommand('530 Login incorrect.\r\n')
+            listen_sock.close( )
+            sys.exit()
+            
         else:
             self.sendCommand('230 User logged in, proceed.\r\n')
             self.passwd = passwd
@@ -444,12 +449,12 @@ def serverListener( ):
 if __name__ == "__main__":
     log('Start ftp server', 'Enter q or Q to stop ftpServer...')
     listener = threading.Thread(target=serverListener)
+    listener.daemon = True
     listener.start( )
-
     if sys.version_info[0] < 3:
         input = raw_input
-
-    if input().lower() == "q":
-        listen_sock.close( )
-        log('Server stop', 'Server closed')
-        sys.exit( )
+    while input().lower() != "q":
+        continue
+    listen_sock.close( )
+    log('Server stop', 'Server closed')
+    sys.exit( )
