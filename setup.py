@@ -17,7 +17,7 @@ DATA_FILES = [
 # OPTIONS = {'argv_emulation': True}
 OPTIONS = {
     'argv_emulation': True,
-    'includes': ['sip', 'PyQt4']
+    'includes': ['sip', 'PyQt5']
 }
 
 setup(
