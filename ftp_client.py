@@ -5,7 +5,6 @@ import sys
 from threading import Thread
 from ftplib import FTP
 from urllib.parse import urlparse
-import tomlkit
 from utils import fileProperty
 from dialog import loginDialog, ProgressDialog, DownloadProgressWidget, UploadProgressWidget
 from permissions import FilePerm
@@ -23,8 +22,8 @@ app_icon_path = os.path.join(os.path.dirname(__file__), 'icons')
 qIcon = lambda name: QtGui.QIcon(os.path.join(app_icon_path, name))
 
 QApplication.setApplicationName("FTP")
-#QApplication.setOrganizationName("WizardAssistant")
-#QApplication.setOrganizationDomain("wizardassistant.com")
+#QApplication.setOrganizationName("SomeCompany")
+#QApplication.setOrganizationDomain("somedomain.com")
 
 # ---------------------------------------------------------------------------------#
 ## The BaseGuiWidget provide LocalGuiWidget and RemoteGuiWidget to inheritance,  ##
