@@ -1,29 +1,31 @@
 #!/usr/bin/env python
-# --*--codig: utf8 --*--
+# --*--encoding:utf8--*--
 
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+import os
+import pwd
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import *
 
-class LoginDialog(QtGui.QDialog):
+
+class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
-        import os, pwd
         self.setFixedSize(400, 250)
-        self.nameLabel   = QtGui.QLabel('Name:')
-        self.passwdLabel = QtGui.QLabel('Password:')
-        self.nameEdit    = QtGui.QLineEdit()
-        self.passwdEdit  = QtGui.QLineEdit()
+        self.nameLabel = QLabel('Name:')
+        self.passwdLabel = QLabel('Password:')
+        self.nameEdit = QLineEdit()
+        self.passwdEdit = QLineEdit()
         self.nameEdit.setText(pwd.getpwuid(os.getuid()).pw_name)
-        self.passwdEdit.setEchoMode(QtGui.QLineEdit.Password)
+        self.passwdEdit.setEchoMode(QLineEdit.Password)
 
-        self.buttonBox = QtGui.QDialogButtonBox()
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox = QDialogButtonBox()
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
 
-        self.registerRadio = QtGui.QRadioButton('Register')
-        self.visitorRadio  = QtGui.QRadioButton('Visitor')
+        self.registerRadio = QRadioButton('Register')
+        self.visitorRadio = QRadioButton('Visitor')
         self.registerRadio.setChecked(True)
 
-        self.groupBox = QtGui.QGroupBox('Login')
+        self.groupBox = QGroupBox('Login')
         self.groupBox.setStyleSheet('''
         QGroupBox
         {
@@ -32,15 +34,15 @@ class LoginDialog(QtGui.QDialog):
             font-family: Monaco
         }
         ''')
-        self.layout = QtGui.QGridLayout()
+        self.layout = QGridLayout()
         self.layout.addWidget(self.registerRadio, 0, 0, 2, 1)
-        self.layout.addWidget(self.visitorRadio,  1, 0, 3, 1)
-        self.layout.addWidget(self.nameLabel,     3, 0, 3, 1)
-        self.layout.addWidget(self.nameEdit,      3, 1, 3, 1)
-        self.layout.addWidget(self.passwdLabel,   4, 0, 6, 1)
-        self.layout.addWidget(self.passwdEdit,    4, 1, 6, 1)
+        self.layout.addWidget(self.visitorRadio, 1, 0, 3, 1)
+        self.layout.addWidget(self.nameLabel, 3, 0, 3, 1)
+        self.layout.addWidget(self.nameEdit, 3, 1, 3, 1)
+        self.layout.addWidget(self.passwdLabel, 4, 0, 6, 1)
+        self.layout.addWidget(self.passwdEdit, 4, 1, 6, 1)
         self.groupBox.setLayout(self.layout)
-        self.mainLayout = QtGui.QVBoxLayout()
+        self.mainLayout = QVBoxLayout()
         self.mainLayout.addWidget(self.groupBox)
         self.mainLayout.addWidget(self.buttonBox)
         self.setLayout(self.mainLayout)
@@ -56,50 +58,51 @@ class LoginDialog(QtGui.QDialog):
 
     def checkNameEdit(self):
         if not self.nameEdit.text() and not self.visitorRadio.isChecked():
-            self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         elif self.nameEdit.text() and self.registerRadio.isChecked():
-            self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
     def enableEdit(self):
         self.nameEdit.setEnabled(True)
         self.passwdEdit.setEnabled(True)
-        self.checkNameEdit()
-        self.checkNameField()
+        # self.checkNameEdit()
+        # self.checkNameField()
 
     def disableEdit(self):
         self.nameEdit.setEnabled(False)
         self.passwdEdit.setEnabled(False)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setFocus()
+        self.buttonBox.button(QDialogButtonBox.Ok).setFocus()
 
 
-class BaseProgressWidget(QtGui.QWidget):
+class BaseProgressWidget(QWidget):
     updateProgress = QtCore.pyqtSignal(str)
+
     def __init__(self, text='', parent=None):
         super(BaseProgressWidget, self).__init__(parent)
         self.setFixedHeight(50)
-        self.text  = text
-        self.progressbar = QtGui.QProgressBar()
+        self.text = text
+        self.progressbar = QProgressBar()
         self.progressbar.setTextVisible(True)
         self.updateProgress.connect(self.set_value)
 
-        self.bottomBorder = QtGui.QWidget()
+        self.bottomBorder = QWidget()
         self.bottomBorder.setStyleSheet("""
             background: palette(shadow);
         """)
-        self.bottomBorder.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed))
+        self.bottomBorder.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
         self.bottomBorder.setMinimumHeight(1)
 
-        self.label  = QtGui.QLabel(self.text)
+        self.label = QLabel(self.text)
         self.label.setStyleSheet("""
             font-weight: bold;
         """)
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setContentsMargins(10,0,10,0)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(10, 0, 10, 0)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.progressbar)
 
-        self.mainLayout = QtGui.QVBoxLayout()
-        self.mainLayout.setContentsMargins(0,0,0,0)
+        self.mainLayout = QVBoxLayout()
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addLayout(self.layout)
         self.mainLayout.addWidget(self.bottomBorder)
         self.setLayout(self.mainLayout)
@@ -116,7 +119,7 @@ class BaseProgressWidget(QtGui.QWidget):
 class DownloadProgressWidget(BaseProgressWidget):
     def __init__(self, text='Downloading', parent=None):
         super(self.__class__, self).__init__(text, parent)
-        style ="""
+        style = """
         QProgressBar {
             border: 2px solid grey;
             border-radius: 5px;
@@ -133,7 +136,7 @@ class DownloadProgressWidget(BaseProgressWidget):
 class UploadProgressWidget(BaseProgressWidget):
     def __init__(self, text='Uploading', parent=None):
         super(self.__class__, self).__init__(text, parent)
-        style ="""
+        style = """
         QProgressBar {
             border: 2px solid grey;
             border-radius: 5px;
@@ -146,20 +149,21 @@ class UploadProgressWidget(BaseProgressWidget):
         }"""
         self.progressbar.setStyleSheet(style)
 
-class ProgressDialog(QtGui.QMainWindow):
+
+class ProgressDialog(QMainWindow):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         self.resize(500, 250)
-        self.scrollArea = QtGui.QScrollArea()
+        self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
         self.setCentralWidget(self.scrollArea)
 
-        self.centralWidget = QtGui.QWidget()
+        self.centralWidget = QWidget()
         self.scrollArea.setWidget(self.centralWidget)
 
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QVBoxLayout()
         self.layout.setAlignment(QtCore.Qt.AlignTop)
-        self.layout.setContentsMargins(0,10,0,0)
+        self.layout.setContentsMargins(0, 10, 0, 0)
         self.centralWidget.setLayout(self.layout)
 
     def addProgressbar(self, progressbar):
@@ -167,7 +171,7 @@ class ProgressDialog(QtGui.QMainWindow):
 
     def addProgress(self, type, title, size):
         if type not in ['download', 'upload']:
-            raise "type must 'download' or 'upload'"
+            raise str("type must 'download' or 'upload'")
 
         if type == 'download':
             pb = DownloadProgressWidget(text=title)
@@ -177,39 +181,44 @@ class ProgressDialog(QtGui.QMainWindow):
         self.addProgressbar(pb)
         return pb
 
+
 def loginDialog(parent=None):
     login = LoginDialog(parent)
     if not login.isAccepted:
         return False
     elif login.visitorRadio.isChecked():
-        return ('anonymous', 'anonymous', True)
+        return 'anonymous', 'anonymous', True
     else:
-        return (str(login.nameEdit.text()), str(login.passwdEdit.text()), True)
+        return str(login.nameEdit.text()), str(login.passwdEdit.text()), True
+
 
 if __name__ == '__main__':
     def testLoinDialog():
-        app = QtGui.QApplication([])
+        app = QApplication([])
         print(loginDialog())
+
 
     def testProgressDialog():
         p = ProgressDialog()
 
+
     def testProgressDialog():
         import random
         number = [x for x in range(1, 101)]
-        progresses = [ ]
+        progresses = []
         while len(progresses) <= 20: progresses.append(random.choice(number))
-        app = QtGui.QApplication([])
+        app = QApplication([])
         pbs = ProgressDialog()
         for i in progresses:
             pb = pbs.addProgress(type='download', title='download', size=100)
-            pb.set_value(' '*i)
+            pb.set_value(' ' * i)
 
         for i in progresses:
             pb = pbs.addProgress(type='upload', title='upload', size=100)
-            pb.set_value(' '*i)
+            pb.set_value(' ' * i)
         pbs.show()
         app.exec_()
+
 
     testProgressDialog()
     testLoinDialog()

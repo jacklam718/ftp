@@ -1,1 +1,4 @@
 *.pyc
+/PyQt_FTP_Client.egg-info/
+/.venv/
+/.eggs/
