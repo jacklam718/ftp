@@ -1,15 +1,15 @@
 About this project
 ==================
-This is FTP server & client, client using PyQt GUI framework
+This is FTP server & client, client using PyQt5 GUI framework
 
 ## Why I create this project?
 Because Qt framework seems a powerful and interesting framework, so I want to learn and try this framework. Another reason I'm interested about `Internet Protocol` including the FTP Protocol so I want to try to implement FTP Protocol.
 
 ## Dependencies
-PyQt4.x
+PyQt5.x
 
 ## Tested on
-`Python2.7` & `python3.5`
+`Python2.7` & `python3.5` & `python3.8`
 
 ## Usage
 ```bash
@@ -25,9 +25,17 @@ Currently can only run on Linux like OS e.g Ubuntu, Mac OSX etc.
 
 ## Screenshots
 ##### ftp server
-<img  src="https://raw.github.com/jacklam718/ftp/master/screenshots/server.jpg" alt="ftp server"  width="450px" height="250px" />
+<img  src="https://gitlab.com/mikeramsey/wizardftp/-/raw/master/screenshots/server.jpg" alt="ftp server"  width="450px" height="250px" />
 
 
 ##### ftp client
-<img src="https://raw.github.com/jacklam718/ftp/master/screenshots/client_main_window.jpg" alt="client main window"
+<img src="https://gitlab.com/mikeramsey/wizardftp/-/raw/master/screenshots/client_main_window.png" alt="client main window"
 width="450px" height="250px"/>
+
+
+## Credits
+permissions.py source from Perfm
+https://github.com/keysemble/perfm/
+
+Humanbytes Filesize function
+https://stackoverflow.com/a/63839503/8874388
