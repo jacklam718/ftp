@@ -8,7 +8,7 @@ import stat
 
 def fileProperty(filepath):
     """
-    return information from given file, like this "-rw-r--r-- 1 User Group 312 Aug 1 2014 filename"
+    return information from given file
     """
     st = os.stat(filepath)
     fileMessage = [ ]
